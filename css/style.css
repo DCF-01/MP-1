@@ -1,0 +1,70 @@
+:root {
+    --primary: #ddd;
+    --dark: #333;
+    --light: #fff;
+    --shadow: 0 1px 5px rgba(104, 104, 104, 0.8);
+    --red: #5d0106;
+    --lightblue: #8bd7ec;
+    --darkblue: #136586;
+}
+
+:-webkit-input-placeholder {
+    font-style: italic;
+    opacity: 0;
+}
+:-moz-placeholder {
+    font-style: italic;  
+    opacity: 0;
+}
+::-moz-placeholder {
+    font-style: italic;  
+    opacity: 0;
+}
+:-ms-input-placeholder { 
+     
+    font-style: italic; 
+    opacity: 0;
+}
+
+html {
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--dark);
+}
+
+div {
+    margin-top: 25px;
+    width: 99vw; /* REDUCES SERIES XLABEL ENTRIES, AS NOT ENOUGH WIDTH (INTENTIONAL) SET TO 100% FOR ALL */
+    height: 90vh;
+   
+}
+
+
+
+input {
+    border: 2px solid var(--dark);
+    box-shadow: var(--shadow);
+    padding: 7px;
+    text-align: center;
+    
+}
+
+.btn {
+    display: inline;
+    padding: 7px 25px 7px 25px;
+    background: var(--dark);
+    color: var(--light);
+    border: 0;
+    box-shadow: var(--shadow);
+    margin: 0 0 0 10px;
+}
+
+.btn:hover {
+    background: var(--light);
+    color: var(--dark);
+}
+
+label {
+    font-size: 1rem;
+    color: var(--dark);
+}
