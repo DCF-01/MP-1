@@ -32,13 +32,10 @@ html {
     color: var(--dark);
 }
 
-div {
-    margin-top: 25px;
-    width: 99vw; /* REDUCES SERIES XLABEL ENTRIES, AS NOT ENOUGH WIDTH (INTENTIONAL) SET TO 100% FOR ALL */
-    height: 90vh;
-   
-}
 
+body {
+    padding: 20px;
+  }
 
 
 input {
@@ -49,6 +46,10 @@ input {
     
 }
 
+#search {
+    margin: 20px;
+}
+
 .btn {
     display: inline;
     padding: 7px 25px 7px 25px;
@@ -56,7 +57,7 @@ input {
     color: var(--light);
     border: 0;
     box-shadow: var(--shadow);
-    margin: 0 0 0 10px;
+    margin-right: 30px;
 }
 
 .btn:hover {
@@ -67,4 +68,22 @@ input {
 label {
     font-size: 1rem;
     color: var(--dark);
+}
+
+.ticker-input-container {
+    display: flex;
+    align-items: center;
+}
+
+.panel-container {
+    display: block;
+    width: 85vw;
+    height: 45vh;
+    margin: 40px;
+}
+  
+.chart {
+    display: block;
+    width: 100%;
+    height: 100%;
 }

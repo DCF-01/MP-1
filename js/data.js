@@ -1,35 +1,72 @@
-function getURL(ticker){
-    return 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + ticker + '&interval=1min&datatype=csv&apikey=PWU390I6GYWLGRYZ';
+let ticker;
+
+let chart_url;
+let earnings_url; 
+let cash_flow_url;
+let balance_sheet_url;
+
+
+
+// alt VM5QW21H9GNMSUE2  
+//PWU390I6GYWLGRYZ  
+function setUrls(){
+    chart_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + ticker + '&interval=1min&datatype=csv&apikey=PWU390I6GYWLGRYZ';
+    earnings_url = 'https://www.alphavantage.co/query?function=EARNINGS&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
+    cash_flow_url = 'https://www.alphavantage.co/query?function=CASH_FLOW&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
+    balance_sheet_url = 'https://www.alphavantage.co/query?function=BALANCE_SHEET&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
 }
 
-var btn = document.querySelector('button');
-var input = document.querySelector('input');
 
-btn.onclick =  function(){
+
+//------------display-ratios------------------
+const pe_display = document.getElementById('pe');
+const dy_display = document.getElementById('div-yield');
+const eps_display = document.getElementById('eps');
+const ann_ds_display = document.getElementById('annual-div-share');
+//--------------------------------------------
+
+const btn = document.querySelector('button');
+const input = document.querySelector('input');
+const spinner = document.getElementById('spinner');
+
+btn.addEventListener('click', renderData)
+input.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter'){
+        renderData();
+    }
+})
+
+
+function renderData(){
+    spinner.className = 'spinner-border';
+
+    //get ticker value and set urls
+
+    ticker = input.value;
+    input.textContent = '';
+    setUrls(ticker);
+
+    //reload canvas
     let canvas = document.getElementById('chart');
     canvas.remove();
-
-    let div = document.querySelector('div');
+    let panel_container = document.querySelector('.panel-container');
     let newCanvas = document.createElement('canvas');
-    newCanvas.style = 'width:100%; height:100%';
     newCanvas.id = 'chart';
-    
-    div.appendChild(newCanvas)
+    newCanvas.style.height='100%'
+    newCanvas.style.width='100%'
+    panel_container.appendChild(newCanvas);
 
-    let ticker = input.value;
-    input.textContent = '';
     
     chartIT(ticker);
+    getRatios();
 
 }
 
-async function getData(arg){
-    ticker = arg
-    url = getURL(ticker);
+async function getData(){
     let table = [];
     let xlabels = [];
     let yprice = [];
-    let response = await fetch(url);
+    let response = await fetch(chart_url);
     let data = await response.text();
     //console.log(data);
 
@@ -46,17 +83,15 @@ async function getData(arg){
         xlabels.push(timestamp); // labels x-axis
         yprice.push(close); // prices y-axis
 
-        // TESTING - print in console
-        console.log(timestamp, close);
         })
     xlabels.reverse();
     yprice.reverse();
+
     return {xlabels, yprice};
     }
 
         
-async function chartIT(arg){
-    ticker = arg;
+async function chartIT(){
     const data = await getData(ticker);
     const ctx = document.getElementById('chart').getContext('2d');
     const myChart = new Chart(ctx, {
@@ -86,6 +121,63 @@ async function chartIT(arg){
                 }
             }
         })
+}
+
+async function getRatios() {
+    // current price
+    let price_close = await getData().then((res) => {
+        return res.yprice[100];
+    });
+    
+    //earnings per share trailing 12m
+    let eps_TTM = await fetch(earnings_url).then((res) => res.json()).then((data) => {
+        return sumLastFour(data);
+    });
+
+    async function sumLastFour(data){
+        let sum = 0;
+        for(let i = 0; i < 4; i++){
+            sum += parseFloat(data.quarterlyEarnings[i].reportedEPS);
+        }
+        return sum.toFixed(2);
     }
-// default first call
-chartIT('AAPL');
+
+
+    let cash_flow_data = (await fetch(cash_flow_url)).json();
+    let dividend_payout = Math.abs((await cash_flow_data).annualReports[0].dividendPayout);
+
+    let balance_sheet_data = (await fetch(balance_sheet_url)).json();
+    let common_shares = Math.abs((await balance_sheet_data).annualReports[0].commonStockSharesOutstanding);
+    
+    //    
+    let price_earnings_ratio =  (parseFloat(price_close / eps_TTM)).toFixed(2);
+    //
+    let annual_dividend_per_share = (parseFloat(dividend_payout / common_shares)).toFixed(2); 
+    //
+    let divident_yield =  (parseFloat((annual_dividend_per_share / price_close) * 100)).toFixed(2);
+
+    console.log(dividend_payout)
+    console.log('annual div per share: ' +annual_dividend_per_share);
+    console.log('dividen yield: ' + divident_yield)
+    console.log('P/E: ' + price_earnings_ratio)
+    console.log('EPS: ' + eps_TTM);
+    console.log(price_close);
+
+    populateFields(price_earnings_ratio, divident_yield, eps_TTM, annual_dividend_per_share);
+}
+
+function populateFields(pe, dy, eps, adps) {
+    if (!isNaN(dy)) {
+        dy_display.textContent = `${dy}%`;
+        ann_ds_display.textContent = adps;
+    }
+    else if (isNaN(dy)){
+        dy_display.textContent = '-';
+        ann_ds_display.textContent = '-';
+    }
+    pe_display.textContent = pe;
+    eps_display.textContent = eps;
+
+    spinner.className = '';
+}
+
