@@ -46,6 +46,10 @@ input {
     
 }
 
+.main-container {
+    height: 90vh;
+}
+
 #search {
     margin: 20px;
 }
@@ -73,12 +77,13 @@ label {
 .ticker-input-container {
     display: flex;
     align-items: center;
+    margin-top: 2%;
 }
 
 .panel-container {
     display: block;
     width: 85vw;
-    height: 45vh;
+    height: 65%;
     margin: 40px;
 }
   

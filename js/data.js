@@ -8,15 +8,17 @@ let balance_sheet_url;
 
 
 // alt VM5QW21H9GNMSUE2  
-//PWU390I6GYWLGRYZ  
+//PWU390I6GYWLGRYZ
+const key = 'PWU390I6GYWLGRYZ';
+
 function setUrls(){
-    chart_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + ticker + '&interval=1min&datatype=csv&apikey=PWU390I6GYWLGRYZ';
-    earnings_url = 'https://www.alphavantage.co/query?function=EARNINGS&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
-    cash_flow_url = 'https://www.alphavantage.co/query?function=CASH_FLOW&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
-    balance_sheet_url = 'https://www.alphavantage.co/query?function=BALANCE_SHEET&symbol=' + ticker + '&apikey=PWU390I6GYWLGRYZ';
+    chart_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=' + ticker + '&interval=1min&datatype=csv&apikey=' + key;
+    earnings_url = 'https://www.alphavantage.co/query?function=EARNINGS&symbol=' + ticker + '&apikey=' + key;
+    cash_flow_url = 'https://www.alphavantage.co/query?function=CASH_FLOW&symbol=' + ticker + '&apikey=' + key;
+    balance_sheet_url = 'https://www.alphavantage.co/query?function=BALANCE_SHEET&symbol=' + ticker + '&apikey=' + key;
 }
 
-
+let test_url = 'https://www.alphavantage.co/query?function=EARNINGS&symbol=' + 'AAPL' + '&apikey=' + key;
 
 //------------display-ratios------------------
 const pe_display = document.getElementById('pe');
@@ -62,7 +64,7 @@ function renderData(){
 
 }
 
-async function getData(){
+async function getChartData(){
     let table = [];
     let xlabels = [];
     let yprice = [];
@@ -92,7 +94,7 @@ async function getData(){
 
         
 async function chartIT(){
-    const data = await getData(ticker);
+    const data = await getChartData(ticker);
     const ctx = document.getElementById('chart').getContext('2d');
     const myChart = new Chart(ctx, {
         type: 'line',
@@ -123,47 +125,60 @@ async function chartIT(){
         })
 }
 
-async function getRatios() {
-    // current price
-    let price_close = await getData().then((res) => {
-        return res.yprice[100];
-    });
-    
-    //earnings per share trailing 12m
-    let eps_TTM = await fetch(earnings_url).then((res) => res.json()).then((data) => {
-        return sumLastFour(data);
-    });
 
-    async function sumLastFour(data){
-        let sum = 0;
-        for(let i = 0; i < 4; i++){
-            sum += parseFloat(data.quarterlyEarnings[i].reportedEPS);
+async function getRatios() {
+    // [0] = earnings; [1] = cash flow; [2] = balance sheet
+    const data_array = [];
+
+    try {
+        const promise_array = await Promise.all([
+            fetch(earnings_url), 
+            fetch(cash_flow_url), 
+            fetch(balance_sheet_url)
+        ]);
+
+        for await (let item of promise_array){
+            data_array.push(await item.json());
         }
-        return sum.toFixed(2);
+
+        setRatios();
+    }
+    catch(err) {
+        throw new Error('API Error, ' + err);
     }
 
+    async function setRatios(){
+        //current price
+        let price_close = await getChartData().then((res) => {
+            return res.yprice[100];
+        });
+        
+        //earnings per share trailing 12m
+        let eps_TTM = sumLastFour(data_array[0]) 
 
-    let cash_flow_data = (await fetch(cash_flow_url)).json();
-    let dividend_payout = Math.abs((await cash_flow_data).annualReports[0].dividendPayout);
+        function sumLastFour(data){
+            let sum = 0;
+            for(let i = 0; i < 4; i++){
+                sum += parseFloat(data.quarterlyEarnings[i].reportedEPS);
+            }
+            return sum.toFixed(2);
+        }
 
-    let balance_sheet_data = (await fetch(balance_sheet_url)).json();
-    let common_shares = Math.abs((await balance_sheet_data).annualReports[0].commonStockSharesOutstanding);
-    
-    //    
-    let price_earnings_ratio =  (parseFloat(price_close / eps_TTM)).toFixed(2);
-    //
-    let annual_dividend_per_share = (parseFloat(dividend_payout / common_shares)).toFixed(2); 
-    //
-    let divident_yield =  (parseFloat((annual_dividend_per_share / price_close) * 100)).toFixed(2);
+        // let cash_flow_data = (await fetch(cash_flow_url)).json();
+        let dividend_payout = Math.abs(data_array[1].annualReports[0].dividendPayout);
 
-    console.log(dividend_payout)
-    console.log('annual div per share: ' +annual_dividend_per_share);
-    console.log('dividen yield: ' + divident_yield)
-    console.log('P/E: ' + price_earnings_ratio)
-    console.log('EPS: ' + eps_TTM);
-    console.log(price_close);
+        // let balance_sheet_data = (await fetch(balance_sheet_url)).json();
+        let common_shares = Math.abs(data_array[2].annualReports[0].commonStockSharesOutstanding);
+        
+        //    
+        let price_earnings_ratio =  (parseFloat(price_close / eps_TTM)).toFixed(2);
+        //
+        let annual_dividend_per_share = (parseFloat(dividend_payout / common_shares)).toFixed(2); 
+        //
+        let divident_yield =  (parseFloat((annual_dividend_per_share / price_close) * 100)).toFixed(2);
 
-    populateFields(price_earnings_ratio, divident_yield, eps_TTM, annual_dividend_per_share);
+        populateFields(price_earnings_ratio, divident_yield, eps_TTM, annual_dividend_per_share);
+    }
 }
 
 function populateFields(pe, dy, eps, adps) {
