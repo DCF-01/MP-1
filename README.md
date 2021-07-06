@@ -15,7 +15,7 @@
 
 <img src="https://i.imgur.com/bkbFCHi.png"/>
 
-***You can get the full dataset once only every minute due to API limitations.***
+***You can get the full dataset only once every minute, due to API limitations.***
 
 *The maximum amount of api calls is 5 / min as per Alphavantage API limits*
 
