@@ -2,6 +2,8 @@
 
 **This  project allows users to quickly view critical stock data on any given public company by providing the following:**
 
+[View Project](https://dcf-01.github.io/MP-1/)	
+
 1. Historical data for the last 6 months
 2. Current stock price
 3. Price / Earnings Ratio
