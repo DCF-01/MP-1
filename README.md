@@ -1,6 +1,6 @@
 # Market project - One
 
-**This  project allows users to quickly view critical stock data on any given public company by providing the following:**
+**This  project allows users to quickly view critical stock data for any given public company by providing the following:**
 
 [View Project](https://dcf-01.github.io/MP-1/)	
 
